@@ -91,6 +91,21 @@ module.exports = class Ti84series {
     }
   }
 
+  async getBatteryLevel() {
+    await this._d.send({
+      type: v.virtualPacketTypes.DUSB_VPKT_PARM_REQ,
+      data: [
+        0, 1,
+        b.intToBytes(v.parameters.DUSB_PID_BATTERY_LEVEL, 2)
+      ]
+    });
+    const paramsResponse = await this._d.expect(v.virtualPacketTypes.DUSB_VPKT_PARM_DATA);
+    const params = b.destructParameters(paramsResponse.data);
+    if ( !params.every(p => p.ok) )
+      throw 'Could not succesfully get all parameters';
+    return params.find(p => p.type == v.parameters.DUSB_PID_BATTERY_LEVEL).value;
+  }
+
   async _sendEntry(entry) {
     await this._d.send({
       type: v.virtualPacketTypes.DUSB_VPKT_RTS,
